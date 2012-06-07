@@ -39,10 +39,9 @@ connection.connect()
 ########test data#####
 
 @inserts = (connection, pcId, date, cpu) ->
-  console.log "querying for last insert"
   connection.query('insert into data (pc, dat, cpu ) values (?, ?, ?)',[pcId, date, cpu], (err, rows, fields) =>
     throw err if (err) 
-    console.log(rows.insertId);
+    console.log "inserted " +  rows.insertId
   )
 #setInterval ( => @getLastDataWrapper('pc1')), 5000
 setInterval ( => @inserts(connection, 'pc1', new Date(), Math.random())), 10000
@@ -71,16 +70,17 @@ getAllData = (connection, pcId, callback) ->
 #getAllData(connection, 'pc1')
 #getAllData(connection, 'pc2')
 
-@getAllDataWrapper = (pcId) ->
+@getAllDataWrapper = (connection, pcId) ->
   getAllData connection, pcId, (result) ->
     for item in result
       io.sockets.emit 'chart', {chartData: item}
       console.log item
   
-@getLastDataWrapper = (pcId) ->
+@getLastDataWrapper = (connection, pcId) ->
   getLastData connection, pcId, (result) ->
-    io.sockets.emit 'chart', {chartData: result}
-    console.log result
+    for item in result
+#      io.sockets.emit 'chart', {chartData: item}
+      console.log item
 
 #getAllData connection, 'pc1', (result) ->
 #  for item in result
@@ -89,8 +89,8 @@ getAllData = (connection, pcId, callback) ->
 
 
 #connection.end()
-@getLastDataWrapper('pc1')
-#setInterval ( => @getLastDataWrapper('pc1')), 5000
+#@getLastDataWrapper('pc1')
+setInterval ( => @getLastDataWrapper(connection, 'pc1')), 5000
 #  setInterval ( => @getAllDataWrapper('pc1')), 5000 
 
 io.sockets.on 'connection', (socket) =>
