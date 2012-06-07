@@ -56,12 +56,12 @@ getAllData = (connection, appId) ->
     return rows
   )
 
+# uncomment if you want to see sum test output
+#getLastData(connection, 'pc1')
+#getLastData(connection, 'pc2')
 
-getLastData(connection, 'pc1')
-getLastData(connection, 'pc2')
-
-getAllData(connection, 'pc1')
-getAllData(connection, 'pc2')
+#getAllData(connection, 'pc1')
+#getAllData(connection, 'pc2')
 
 
 connection.end()
