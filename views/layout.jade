@@ -137,15 +137,5 @@ html
               chart.redraw();
             }
           }
-          socket.on('count', function (data) {
-                requestData(0, data.number);  
-                if(data.count % 7 == 0) {
-                  addNewSerie('VM2')
-                }              
-                if(data.count > 7) {                  
-                  requestData(1, data.number2);
-                }
-                $('span').text(data.number*100 + '!');
-          });
 
 
