@@ -1,0 +1,153 @@
+!!!
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    script(src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js")
+    script(src="/socket.io/socket.io.js",type='text/javascript')
+    script(src="/javascripts/jquery.js",type='text/javascript')
+    script(src="/javascripts/jquery.flot.js",type='text/javascript')
+    script(src="/highslide/highslide-full.min.js")
+    script(src="/highslide/highslide.config.js", charset="utf-8")
+    script(src="http://code.highcharts.com/highcharts.js")
+    script(src="http://code.highcharts.com/modules/exporting.js")
+  body
+    
+    section#wrapper!= body
+        //canvas#mycanvas
+        div#graph(style="width:600px;height:300px;")
+        script(type='text/javascript')
+          var socket = io.connect();           
+          var chart = null;
+          function requestData(index, dnumber) {
+            if(chart != null) {
+              var series = chart.series[index];              
+              var x = (new Date()).getTime(); // current time              
+              var y = Math.random() * 100;
+              if (dnumber != null) {
+                y = dnumber * 100;
+              }                 
+              series.addPoint([x, y], true, false);              
+            }
+          };
+        
+          chart = new Highcharts.Chart({
+            chart: {
+              renderTo: 'graph',
+              type: 'spline',
+              marginRight: 10,
+              events: requestData(0)
+            },
+            title: {
+              text: 'CPU Usage Webservice1'
+            },
+            xAxis: {
+              type: 'datetime',
+              tickPixelInterval: 100
+            },
+            yAxis: {
+              min: 0,
+              max: 100,
+              tickInterval: 20,
+              title: {
+                text: 'CPU %'
+              },
+              plotBands: [{ // Light air
+                from: 80,
+                to: 100,
+                color: 'rgba(255, 0, 0, 0.2)',
+                label: {
+                    text: 'Critical',
+                    style: {
+                        color: '#606060'
+                    }
+                }
+              }]
+            },
+            plotOptions: {
+                spline: {
+                    lineWidth: 1,
+                    marker: {
+                        enabled: false
+                    },
+                    states: {
+                        hover: {
+                            lineWidth: 3
+                        }
+                    },
+                }
+            },
+            tooltip: {
+              enabled: false,
+              formatter: function() {
+                  return '<b>'+ this.series.name +'</b><br/>'+
+                  Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) +'<br/>'+
+                  Highcharts.numberFormat(this.y, 2);
+              }
+            },
+            legend: {
+              enabled: true
+            },
+            exporting: {
+              enabled: false
+            },
+            series: [{
+              name: 'VM1',
+              data: (function() {
+                // generate an array of random data
+                var data = [],
+                  time = (new Date()).getTime(),
+                  i;
+
+                for (i = -19; i <= 0; i++) {
+                  data.push({
+                    x: time + i * 10000,
+                    y: Math.random() * 100
+                  });
+                }
+                return data;
+              })()
+            }]
+          });
+          function serieDoesNotExists(seriesName) {
+              for (var i = 0; i < chart.series.length; i++) {
+                if(chart.series[i].name == seriesName) {
+                  return false;
+                }
+              }
+              return true;
+          }
+          function addNewSerie(newName) {
+            if(serieDoesNotExists(newName)) {
+              chart.addSeries({
+                name: 'VM2',
+                data: (function() {
+                  // generate an array of random data
+                  var data = [],
+                    time = (new Date()).getTime(),
+                    i;
+                  for (i = -2; i <= -0; i++) {
+                    data.push({
+                      x: time + i * 10000,
+                      y: Math.random() * 100
+                    });
+                  }
+                  return data;
+                })(),
+                id: Math.floor(Math.random()*1000)
+              });
+              chart.redraw();
+            }
+          }
+          socket.on('count', function (data) {
+                requestData(0, data.number);  
+                if(data.count % 7 == 0) {
+                  addNewSerie('VM2')
+                }              
+                if(data.count > 7) {                  
+                  requestData(1, data.number2);
+                }
+                $('span').text(data.number*100 + '!');
+          });
+
+
