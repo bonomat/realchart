@@ -52,7 +52,7 @@ html
               title: {
                 text: 'CPU %'
               },
-              plotBands: [{ // Light air
+              plotBands: [{ // highlight area
                 from: 80,
                 to: 100,
                 color: 'rgba(255, 0, 0, 0.2)',
@@ -98,12 +98,10 @@ html
                 var data = [],
                 time = (new Date()).getTime(),
                 i;
-                //for (i = -1; i < 0; i++) {
-                  data.push({
-                    x: time,
-                    y: null
-                  });
-                //}
+                data.push({
+                  x: time,
+                  y: null
+                });
                 return data;
               })()
             }]
@@ -120,16 +118,14 @@ html
             return chart.addSeries({
               name: newName,
               data: (function() {
-                // generate an array of random data
+                
                 var data = [],
-                  time = (new Date()).getTime(),
-                  i;
-                //for (i = -1; i < 0; i++) {
-                  data.push({
-                    x: time,
-                    y: null
-                  });
-                //}
+                time = (new Date()).getTime(),
+                i;
+                data.push({
+                  x: time,
+                  y: null
+                });
                 return data;
               })(),
               id: Math.floor(Math.random()*1000)
