@@ -37,17 +37,32 @@ connection = mysql.createConnection {
 
 connection.connect()
 
-getData = (connection, appId) ->
-  connection.query('SELECT m.* from monitor m where m.appId=? and m.id=(select max(id) from monitor m2 where m2.appId=?)',[appId,appId], (err, rows, fields) ->
+getLastData = (connection, appId) ->
+  console.log "querying for last insert"
+  connection.query('SELECT m.* from data m where m.pc=? and m.id=(select max(id) from data m2 where m2.pc=?)',[appId,appId], (err, rows, fields) ->
     throw err if (err) 
     console.log('Query result: ', rows)
 
     return rows
   )
 
-getData(connection, 'webapp1')
-getData(connection, 'webapp2')
-getData(connection, 'webapp3')
+
+getAllData = (connection, appId) ->
+  console.log "querying for all data"
+  connection.query('SELECT m.* from data m where m.pc=?',[appId], (err, rows, fields) ->
+    throw err if (err) 
+    console.log('Query result: ', rows)
+
+    return rows
+  )
+
+
+getLastData(connection, 'pc1')
+getLastData(connection, 'pc2')
+
+getAllData(connection, 'pc1')
+getAllData(connection, 'pc2')
+
 
 connection.end()
 
