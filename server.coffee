@@ -23,6 +23,34 @@ count = 6
 
 data = []
 
+
+######################### mysql part 
+sys = require('util')
+mysql = require('mysql')
+connection = mysql.createConnection {
+  host     : 'localhost',
+  user     : 'root',
+  password : 'password',
+  database : 'pep'
+}
+
+
+connection.connect()
+
+getData = (connection, appId) ->
+  connection.query('SELECT m.* from monitor m where m.appId=? and m.id=(select max(id) from monitor m2 where m2.appId=?)',[appId,appId], (err, rows, fields) ->
+    throw err if (err) 
+    console.log('Query result: ', rows)
+
+    return rows
+  )
+
+getData(connection, 'webapp1')
+getData(connection, 'webapp2')
+getData(connection, 'webapp3')
+
+connection.end()
+
 io.sockets.on 'connection', (socket) ->
   count++
   io.sockets.emit 'count', { date: new Date(), number: Math.random() }
