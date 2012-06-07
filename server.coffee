@@ -24,7 +24,7 @@ count = 6
 data = []
 
 
-######################### mysql part 
+######################### mysql start connection
 sys = require('util')
 mysql = require('mysql')
 connection = mysql.createConnection {
@@ -33,67 +33,44 @@ connection = mysql.createConnection {
   password : 'password',
   database : 'pep'
 }
-
 connection.connect()
 
 ########test data#####
-
 @inserts = (connection, pcId, date, cpu) ->
   connection.query('insert into data (pc, dat, cpu ) values (?, ?, ?)',[pcId, date, cpu], (err, rows, fields) =>
     throw err if (err) 
     console.log "inserted " +  rows.insertId
   )
-#setInterval ( => @getLastDataWrapper('pc1')), 5000
 setInterval ( => @inserts(connection, 'pc1', new Date(), Math.random())), 10000
 
-
-
-
+#######method to retrieve last value
 getLastData = (connection, pcId, callback) ->
   console.log "querying for last insert"
   connection.query('SELECT m.* from data m where m.pc=? and m.dat=(select max(dat) from data m2 where m2.pc=?)',[pcId,pcId], (err, rows, fields) =>
     throw err if (err) 
     callback rows
   )
-
+#######method to retrieve all data per pc
 getAllData = (connection, pcId, callback) ->
   console.log "querying for all data"
-  connection.query('SELECT m.* from data m where m.pc=? order by dat',[pcId], (err, rows, fields) ->
+  connection.query('SELECT m.* from data m where m.pc=? order by dat asc',[pcId], (err, rows, fields) ->
     throw err if (err) 
     callback rows
   )
-
-# uncomment if you want to see sum test output
-#getLastData(connection, 'pc1')
-#getLastData(connection, 'pc2')
-
-#getAllData(connection, 'pc1')
-#getAllData(connection, 'pc2')
-
-@getAllDataWrapper = (connection, pcId) ->
-  getAllData connection, pcId, (result) ->
+########wrapper methods for socket.io
+@getAllDataWrapper = (connection, pcId) =>
+  getAllData connection, pcId, (result) =>
     for item in result
-      io.sockets.emit 'chart', {chartData: item}
-#      console.log item
-  
+      io?.sockets.emit 'chart', {chartData: item}
+    setInterval ( => @getLastDataWrapper(connection, 'pc1')), 10000 
+
 @getLastDataWrapper = (connection, pcId) ->
   getLastData connection, pcId, (result) ->
     for item in result
-      io.sockets.emit 'chart', {chartData: item}
-#      console.log item
-
-#getAllData connection, 'pc1', (result) ->
-#  for item in result
-#    io.sockets.emit 'chart', {chartData: item}
-#    console.log item
-
-
-#connection.end()
-#@getLastDataWrapper('pc1')
-#setInterval ( => @getLastDataWrapper(connection, 'pc1')), 5000
-#  setInterval ( => @getAllDataWrapper('pc1')), 5000 
+      io?.sockets.emit 'chart', {chartData: item}
 
 io.sockets.on 'connection', (socket) =>
+  ############create a new mysql connection for each user
   mys = mysql.createConnection {
     host     : 'localhost',
     user     : 'root',
@@ -102,19 +79,10 @@ io.sockets.on 'connection', (socket) =>
   }
 
   mys.connect()
-  setInterval ( => @getLastDataWrapper(mys, 'pc1')), 12000 
   @getAllDataWrapper(mys, 'pc1')
-  count++
-#  io.sockets.emit 'count', { date: new Date(), number: Math.random() }
 
-#  setInterval(() ->
-#    io.sockets.emit 'count', { date: new Date(), number: Math.random(), count: count++ , number2: Math.random()}
-#  , 5000)
-   
   socket.on 'disconnect', () ->
     #mys.end()
-    count--
-    io.sockets.emit 'count', { number: count }
 
 app.get '/', (req, res) ->
   res.render 'index', {title: 'node.js express socket.io realtime charts'}

@@ -16,6 +16,7 @@ html
         script(type='text/javascript')
           var socket = io.connect();           
           var chart = null;
+          var actualDate = new Date();
           function addChartData(chartData) {
             if(chart != null && chartData.pc != null) {                
               var index = serieIndex(chartData.pc);
@@ -25,9 +26,25 @@ html
               } else {
                 series = addNewSerie(chartData.pc);
               }
-              var x = new Date(chartData.dat).getTime();
-              var y = chartData.cpu * 100;                             
-              series.addPoint([x, y], true, false);              
+              // check if new entry is realy newer than last entry
+              var isFuture = true;
+              var length = series.data.length;
+              if(length == 1) {
+                // remove testdata
+                if(new Date(series.data[0].x).getTime()==actualDate.getTime()) {                  
+                  series.data[0].remove();
+                }
+                length = series.data.length;
+              }
+              if(length > 0) {
+                isFuture = new Date(chartData.dat).getTime() > new Date(series.data[length-1].x).getTime();
+              }
+              if(isFuture) {
+                var x = new Date(chartData.dat).getTime();
+                var y = chartData.cpu * 100;                             
+                series.addPoint([x, y], true, false);              
+              }
+              
             }
           };
         
@@ -95,11 +112,9 @@ html
               name: 'pc1',
               data: (function() {
                 // generate an array of random data
-                var data = [],
-                time = (new Date()).getTime(),
-                i;
+                var data = [];
                 data.push({
-                  x: time,
+                  x: actualDate,
                   y: null
                 });
                 return data;
@@ -117,13 +132,10 @@ html
           function addNewSerie(newName) {
             return chart.addSeries({
               name: newName,
-              data: (function() {
-                
-                var data = [],
-                time = (new Date()).getTime(),
-                i;
+              data: (function() {                
+                var data = [];
                 data.push({
-                  x: time,
+                  x: actualDate.getTime(),
                   y: null
                 });
                 return data;
@@ -132,8 +144,10 @@ html
             });
             chart.redraw();
           }
-          socket.on('chart', function (chartdata) { 
-              addChartData(chartdata.chartData);
+          socket.on('chart', function (data) { 
+              if(!$.isArray(data.chartData)) {
+                addChartData(data.chartData);
+              }
           });
 
 
