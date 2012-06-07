@@ -6,7 +6,7 @@ An example of a realtime chart with node.js, socket.io and highchart and mysql
 
 ## Example
 
-![](http://imageshack.us/photo/my-images/708/realchart.png)
+![](http://img708.imageshack.us/img708/7541/realchart.png)
 
 ## Installation
 
