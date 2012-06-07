@@ -39,20 +39,17 @@ connection.connect()
 
 getLastData = (connection, appId) ->
   console.log "querying for last insert"
-  connection.query('SELECT m.* from data m where m.pc=? and m.id=(select max(id) from data m2 where m2.pc=?)',[appId,appId], (err, rows, fields) ->
+  connection.query('SELECT m.* from data m where m.pc=? and m.dat=(select max(dat) from data m2 where m2.pc=?)',[appId,appId], (err, rows, fields) ->
     throw err if (err) 
     console.log('Query result: ', rows)
-
     return rows
   )
-
 
 getAllData = (connection, appId) ->
   console.log "querying for all data"
   connection.query('SELECT m.* from data m where m.pc=?',[appId], (err, rows, fields) ->
     throw err if (err) 
     console.log('Query result: ', rows)
-
     return rows
   )
 
@@ -62,6 +59,8 @@ getAllData = (connection, appId) ->
 
 #getAllData(connection, 'pc1')
 #getAllData(connection, 'pc2')
+
+
 
 
 connection.end()
