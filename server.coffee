@@ -34,23 +34,20 @@ connection = mysql.createConnection {
   database : 'pep'
 }
 
-
 connection.connect()
 
-getLastData = (connection, appId) ->
+getLastData = (connection, pcId) ->
   console.log "querying for last insert"
-  connection.query('SELECT m.* from data m where m.pc=? and m.dat=(select max(dat) from data m2 where m2.pc=?)',[appId,appId], (err, rows, fields) ->
+  connection.query('SELECT m.* from data m where m.pc=? and m.dat=(select max(dat) from data m2 where m2.pc=?)',[pcId,pcId], (err, rows, fields) ->
     throw err if (err) 
-    console.log('Query result: ', rows)
     return rows
   )
 
-getAllData = (connection, appId) ->
+getAllData = (connection, pcId, callback) ->
   console.log "querying for all data"
-  connection.query('SELECT m.* from data m where m.pc=?',[appId], (err, rows, fields) ->
+  connection.query('SELECT m.* from data m where m.pc=?',[pcId], (err, rows, fields) ->
     throw err if (err) 
-    console.log('Query result: ', rows)
-    return rows
+    callback rows
   )
 
 # uncomment if you want to see sum test output
@@ -60,18 +57,29 @@ getAllData = (connection, appId) ->
 #getAllData(connection, 'pc1')
 #getAllData(connection, 'pc2')
 
+@getAllDataWrapper = (pcId) ->
+  getAllData connection, pcId, (result) ->
+    for item in result
+      io.sockets.emit 'chart', {chartData: item}
+      console.log item
+  
+#getAllData connection, 'pc1', (result) ->
+#  for item in result
+#    io.sockets.emit 'chart', {chartData: item}
+#    console.log item
 
 
+#connection.end()
 
-connection.end()
+io.sockets.on 'connection', (socket) =>
+  setInterval ( => @getAllDataWrapper('pc1')), 5000 
 
-io.sockets.on 'connection', (socket) ->
   count++
-  io.sockets.emit 'count', { date: new Date(), number: Math.random() }
+#  io.sockets.emit 'count', { date: new Date(), number: Math.random() }
 
-  setInterval(() ->
-    io.sockets.emit 'count', { date: new Date(), number: Math.random(), count: count++ , number2: Math.random()}
-  , 5000)
+#  setInterval(() ->
+#    io.sockets.emit 'count', { date: new Date(), number: Math.random(), count: count++ , number2: Math.random()}
+#  , 5000)
    
   socket.on 'disconnect', () ->
     count--
