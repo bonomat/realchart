@@ -98,12 +98,12 @@ html
                 var data = [],
                 time = (new Date()).getTime(),
                 i;
-                for (i = -1; i <= 0; i++) {
+                //for (i = -1; i < 0; i++) {
                   data.push({
-                    x: time + i * 10000,
-                    y: Math.random() * 100
+                    x: time,
+                    y: null
                   });
-                }
+                //}
                 return data;
               })()
             }]
@@ -126,8 +126,8 @@ html
                   i;
                 //for (i = -1; i < 0; i++) {
                   data.push({
-                    x: time + i * 10000,
-                    y: NULL
+                    x: time,
+                    y: null
                   });
                 //}
                 return data;
