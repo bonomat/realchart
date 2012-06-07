@@ -12,19 +12,21 @@ html
   body
     
     section#wrapper!= body
-        //canvas#mycanvas
         div#graph(style="width:600px;height:300px;")
         script(type='text/javascript')
           var socket = io.connect();           
           var chart = null;
-          function requestData(index, dnumber) {
-            if(chart != null) {
-              var series = chart.series[index];              
-              var x = (new Date()).getTime(); // current time              
-              var y = Math.random() * 100;
-              if (dnumber != null) {
-                y = dnumber * 100;
-              }                 
+          function addChartData(chartData) {
+            if(chart != null && chartData.pc != null) {                
+              var index = serieIndex(chartData.pc);
+              var series; 
+              if(index >= 0) {
+                series = chart.series[index];
+              } else {
+                series = addNewSerie(chartData.pc);
+              }
+              var x = new Date(chartData.dat).getTime();
+              var y = chartData.cpu * 100;                             
               series.addPoint([x, y], true, false);              
             }
           };
@@ -34,7 +36,7 @@ html
               renderTo: 'graph',
               type: 'spline',
               marginRight: 10,
-              events: requestData(0)
+              events: addChartData(null)
             },
             title: {
               text: 'CPU Usage Webservice1'
@@ -90,14 +92,13 @@ html
               enabled: false
             },
             series: [{
-              name: 'VM1',
+              name: 'pc1',
               data: (function() {
                 // generate an array of random data
                 var data = [],
-                  time = (new Date()).getTime(),
-                  i;
-
-                for (i = -19; i <= 0; i++) {
+                time = (new Date()).getTime(),
+                i;
+                for (i = -1; i <= 0; i++) {
                   data.push({
                     x: time + i * 10000,
                     y: Math.random() * 100
@@ -107,35 +108,37 @@ html
               })()
             }]
           });
-          function serieDoesNotExists(seriesName) {
+          function serieIndex(seriesName) {
               for (var i = 0; i < chart.series.length; i++) {
                 if(chart.series[i].name == seriesName) {
-                  return false;
+                  return i;
                 }
               }
-              return true;
+              return -1;
           }
           function addNewSerie(newName) {
-            if(serieDoesNotExists(newName)) {
-              chart.addSeries({
-                name: 'VM2',
-                data: (function() {
-                  // generate an array of random data
-                  var data = [],
-                    time = (new Date()).getTime(),
-                    i;
-                  for (i = -2; i <= -0; i++) {
-                    data.push({
-                      x: time + i * 10000,
-                      y: Math.random() * 100
-                    });
-                  }
-                  return data;
-                })(),
-                id: Math.floor(Math.random()*1000)
-              });
-              chart.redraw();
-            }
+            return chart.addSeries({
+              name: newName,
+              data: (function() {
+                // generate an array of random data
+                var data = [],
+                  time = (new Date()).getTime(),
+                  i;
+                for (i = -1; i <= -0; i++) {
+                  data.push({
+                    x: time + i * 10000,
+                    y: Math.random() * 100
+                  });
+                }
+                return data;
+              })(),
+              id: Math.floor(Math.random()*1000)
+            });
+            chart.redraw();
           }
+          socket.on('chart', function (chartdata) { 
+              alert(JSON.stringify(chartdata.chartData));
+              addChartData(chartdata.chartData);
+          });
 
 

@@ -36,11 +36,25 @@ connection = mysql.createConnection {
 
 connection.connect()
 
-getLastData = (connection, pcId) ->
+########test data#####
+
+@inserts = (connection, pcId, date, cpu) ->
   console.log "querying for last insert"
-  connection.query('SELECT m.* from data m where m.pc=? and m.dat=(select max(dat) from data m2 where m2.pc=?)',[pcId,pcId], (err, rows, fields) ->
+  connection.query('insert into data (pc, dat, cpu ) values (?, ?, ?)',[pcId, date, cpu], (err, rows, fields) =>
     throw err if (err) 
-    return rows
+    console.log(rows.insertId);
+  )
+#setInterval ( => @getLastDataWrapper('pc1')), 5000
+setInterval ( => @inserts(connection, 'pc1', new Date(), Math.random())), 10000
+
+
+
+
+getLastData = (connection, pcId, callback) ->
+  console.log "querying for last insert"
+  connection.query('SELECT m.* from data m where m.pc=? and m.dat=(select max(dat) from data m2 where m2.pc=?)',[pcId,pcId], (err, rows, fields) =>
+    throw err if (err) 
+    callback rows
   )
 
 getAllData = (connection, pcId, callback) ->
@@ -63,6 +77,11 @@ getAllData = (connection, pcId, callback) ->
       io.sockets.emit 'chart', {chartData: item}
       console.log item
   
+@getLastDataWrapper = (pcId) ->
+  getLastData connection, pcId, (result) ->
+    io.sockets.emit 'chart', {chartData: result}
+    console.log result
+
 #getAllData connection, 'pc1', (result) ->
 #  for item in result
 #    io.sockets.emit 'chart', {chartData: item}
@@ -70,10 +89,13 @@ getAllData = (connection, pcId, callback) ->
 
 
 #connection.end()
+@getLastDataWrapper('pc1')
+#setInterval ( => @getLastDataWrapper('pc1')), 5000
+#  setInterval ( => @getAllDataWrapper('pc1')), 5000 
 
 io.sockets.on 'connection', (socket) =>
-  setInterval ( => @getAllDataWrapper('pc1')), 5000 
-
+  setInterval ( => @getLastDataWrapper('pc1')), 12000 
+  @getAllDataWrapper('pc1')
   count++
 #  io.sockets.emit 'count', { date: new Date(), number: Math.random() }
 
