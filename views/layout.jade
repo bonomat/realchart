@@ -124,12 +124,12 @@ html
                 var data = [],
                   time = (new Date()).getTime(),
                   i;
-                for (i = -1; i <= -0; i++) {
+                //for (i = -1; i < 0; i++) {
                   data.push({
                     x: time + i * 10000,
-                    y: Math.random() * 100
+                    y: NULL
                   });
-                }
+                //}
                 return data;
               })(),
               id: Math.floor(Math.random()*1000)
@@ -137,7 +137,6 @@ html
             chart.redraw();
           }
           socket.on('chart', function (chartdata) { 
-              alert(JSON.stringify(chartdata.chartData));
               addChartData(chartdata.chartData);
           });
 

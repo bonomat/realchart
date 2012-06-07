@@ -58,7 +58,7 @@ getLastData = (connection, pcId, callback) ->
 
 getAllData = (connection, pcId, callback) ->
   console.log "querying for all data"
-  connection.query('SELECT m.* from data m where m.pc=?',[pcId], (err, rows, fields) ->
+  connection.query('SELECT m.* from data m where m.pc=? order by dat',[pcId], (err, rows, fields) ->
     throw err if (err) 
     callback rows
   )
@@ -74,13 +74,13 @@ getAllData = (connection, pcId, callback) ->
   getAllData connection, pcId, (result) ->
     for item in result
       io.sockets.emit 'chart', {chartData: item}
-      console.log item
+#      console.log item
   
 @getLastDataWrapper = (connection, pcId) ->
   getLastData connection, pcId, (result) ->
     for item in result
-#      io.sockets.emit 'chart', {chartData: item}
-      console.log item
+      io.sockets.emit 'chart', {chartData: item}
+#      console.log item
 
 #getAllData connection, 'pc1', (result) ->
 #  for item in result
@@ -90,12 +90,20 @@ getAllData = (connection, pcId, callback) ->
 
 #connection.end()
 #@getLastDataWrapper('pc1')
-setInterval ( => @getLastDataWrapper(connection, 'pc1')), 5000
+#setInterval ( => @getLastDataWrapper(connection, 'pc1')), 5000
 #  setInterval ( => @getAllDataWrapper('pc1')), 5000 
 
 io.sockets.on 'connection', (socket) =>
-  setInterval ( => @getLastDataWrapper('pc1')), 12000 
-  @getAllDataWrapper('pc1')
+  mys = mysql.createConnection {
+    host     : 'localhost',
+    user     : 'root',
+    password : 'password',
+    database : 'pep'
+  }
+
+  mys.connect()
+  setInterval ( => @getLastDataWrapper(mys, 'pc1')), 12000 
+  @getAllDataWrapper(mys, 'pc1')
   count++
 #  io.sockets.emit 'count', { date: new Date(), number: Math.random() }
 
@@ -104,6 +112,7 @@ io.sockets.on 'connection', (socket) =>
 #  , 5000)
    
   socket.on 'disconnect', () ->
+    #mys.end()
     count--
     io.sockets.emit 'count', { number: count }
 
