@@ -10,7 +10,7 @@ An example of a realtime chart with node.js, socket.io and highchart and mysql
 
 ## Installation
 
-Assuming you have [node.js][6], [npm][7], [coffeescript][8] and mysql[9] installed you can install it with
+Assuming you have [node.js][6], [npm][7], [coffeescript][8] and [mysql][9] installed you can install it with
 
     git clone https://github.com/bonomat/realchart.git
     cd realchart    
