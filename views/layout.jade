@@ -56,7 +56,7 @@ html
               events: addChartData(null)
             },
             title: {
-              text: 'CPU Usage Webservice1'
+              text: 'CPU Usage'
             },
             xAxis: {
               type: 'datetime',
@@ -147,7 +147,7 @@ html
           socket.on('chart', function (data) { 
               if(!$.isArray(data.chartData)) {
                 addChartData(data.chartData);
-              }
+              } // TODO handle if it is an array
           });
 
 
