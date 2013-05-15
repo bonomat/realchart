@@ -44,7 +44,7 @@
     host: 'localhost',
     user: 'root',
     password: 'password',
-    database: 'pep'
+    database: 'realtime'
   });
 
   connection.connect();
@@ -127,7 +127,7 @@
       host: 'localhost',
       user: 'root',
       password: 'password',
-      database: 'pep'
+      database: 'realtime'
     });
     mys.connect();
     _this.getAllDataWrapper(mys, 'pc1');

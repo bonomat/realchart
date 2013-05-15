@@ -1,1 +1,156 @@
-h1 Realtime Chart <span></span>
+
+html
+   head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    script(src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js")
+    script(src="/socket.io/socket.io.js",type='text/javascript')
+    script(src="/javascripts/jquery.js",type='text/javascript')
+    script(src="/javascripts/jquery.flot.js",type='text/javascript')
+    script(src="http://code.highcharts.com/highcharts.js")
+    script(src="http://code.highcharts.com/modules/exporting.js")
+  body
+    
+    h1 Realtime Chart
+
+
+    block content
+        div#graph(style="width:600px;height:300px;")
+        script(type='text/javascript')
+          var socket = io.connect();           
+          var chart = null;
+          var actualDate = new Date();
+          function addChartData(chartData) {
+            if(chart != null && chartData.pc != null) {                
+              var index = serieIndex(chartData.pc);
+              var series; 
+              if(index >= 0) {
+                series = chart.series[index];
+              } else {
+                series = addNewSerie(chartData.pc);
+              }
+              // check if new entry is realy newer than last entry
+              var isFuture = true;
+              var length = series.data.length;
+              if(length == 1) {
+                // remove testdata
+                if(new Date(series.data[0].x).getTime()==actualDate.getTime()) {                  
+                  series.data[0].remove();
+                }
+                length = series.data.length;
+              }
+              if(length > 0) {
+                isFuture = new Date(chartData.dat).getTime() > new Date(series.data[length-1].x).getTime();
+              }
+              if(isFuture) {
+                var x = new Date(chartData.dat).getTime();
+                var y = chartData.cpu * 100;                             
+                series.addPoint([x, y], true, false);              
+              }
+              
+            }
+          };
+        
+          chart = new Highcharts.Chart({
+            chart: {
+              renderTo: 'graph',
+              type: 'spline',
+              marginRight: 10,
+              events: addChartData(null)
+            },
+            title: {
+              text: 'CPU Usage'
+            },
+            xAxis: {
+              type: 'datetime',
+              tickPixelInterval: 100
+            },
+            yAxis: {
+              min: 0,
+              max: 100,
+              tickInterval: 20,
+              title: {
+                text: 'CPU %'
+              },
+              plotBands: [{ // highlight area
+                from: 80,
+                to: 100,
+                color: 'rgba(255, 0, 0, 0.2)',
+                label: {
+                    text: 'Critical',
+                    style: {
+                        color: '#606060'
+                    }
+                }
+              }]
+            },
+            plotOptions: {
+                spline: {
+                    lineWidth: 1,
+                    marker: {
+                        enabled: false
+                    },
+                    states: {
+                        hover: {
+                            lineWidth: 3
+                        }
+                    },
+                }
+            },
+            tooltip: {
+              enabled: false,
+              formatter: function() {
+                  return '<b>'+ this.series.name +'</b><br/>'+
+                  Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) +'<br/>'+
+                  Highcharts.numberFormat(this.y, 2);
+              }
+            },
+            legend: {
+              enabled: true
+            },
+            exporting: {
+              enabled: false
+            },
+            series: [{
+              name: 'pc1',
+              data: (function() {
+                // generate an array of random data
+                var data = [];
+                data.push({
+                  x: actualDate,
+                  y: null
+                });
+                return data;
+              })()
+            }]
+          });
+          function serieIndex(seriesName) {
+              for (var i = 0; i < chart.series.length; i++) {
+                if(chart.series[i].name == seriesName) {
+                  return i;
+                }
+              }
+              return -1;
+          }
+          function addNewSerie(newName) {
+            return chart.addSeries({
+              name: newName,
+              data: (function() {                
+                var data = [];
+                data.push({
+                  x: actualDate.getTime(),
+                  y: null
+                });
+                return data;
+              })(),
+              id: Math.floor(Math.random()*1000)
+            });
+            chart.redraw();
+          }
+          socket.on('chart', function (data) { 
+              if(!$.isArray(data.chartData)) {
+                addChartData(data.chartData);
+              } // TODO handle if it is an array
+          });
+
+
