@@ -1,7 +1,7 @@
 express = require('express')
-io = require('socket.io')
+@io = require('socket.io')
 
-app = module.exports = express.createServer() 
+app = module.exports = express() 
 
 app.configure () -> 
   app.set('views', __dirname + '/views')
@@ -18,7 +18,7 @@ app.configure 'development', () ->
 app.configure 'production', () -> 
   app.use(express.errorHandler()) 
 
-io = require('socket.io').listen(app)
+
 count = 6
 
 data = []
@@ -31,7 +31,7 @@ connection = mysql.createConnection {
   host     : 'localhost',
   user     : 'root',
   password : 'password',
-  database : 'pep'
+  database : 'realtime'
 }
 connection.connect()
 
@@ -69,13 +69,19 @@ getAllData = (connection, pcId, callback) ->
     for item in result
       io?.sockets.emit 'chart', {chartData: item}
 
+
+if not module.parent
+  http_server=app.listen 10927
+  io = @io.listen(http_server)
+  console.log "Express server listening on port %d", 10927
+
 io.sockets.on 'connection', (socket) =>
   ############create a new mysql connection for each user
   mys = mysql.createConnection {
     host     : 'localhost',
     user     : 'root',
     password : 'password',
-    database : 'pep'
+    database : 'realtime'
   }
 
   mys.connect()
@@ -87,7 +93,4 @@ io.sockets.on 'connection', (socket) =>
 app.get '/', (req, res) ->
   res.render 'index', {title: 'node.js express socket.io realtime charts'}
 
-if not module.parent
-  app.listen 10927
-  console.log "Express server listening on port %d", app.address().port
 
